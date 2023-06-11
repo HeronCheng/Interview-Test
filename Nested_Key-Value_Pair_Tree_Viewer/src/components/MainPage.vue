@@ -42,18 +42,21 @@ function onAddNew() {
     key: "",
     value: "",
   })
+  handleTreeViewer();
 }
 // 刪除一條紀錄
 function onDelete(item) {
   const findDeleteItem = (element) => element.key === item.key;
   const delIndex = list.value.findIndex(findDeleteItem);
   list.value.splice(delIndex, 1);
+  handleTreeViewer();
 }
 // 修改key
 function onEditKey(item) {
   const findEditItem = (element) => element.key === item.key;
   const editIndex = list.value.findIndex(findEditItem);
   list.value[editIndex].key = document.getElementById("key" + editIndex).value;
+  handleTreeViewer();
 }
 // 修改value
 function onEditValue(item) {
@@ -95,39 +98,62 @@ const handleTreeViewer = () => {
   function generateHTML(obj, parentElement) {
     count++;
     const keys = Object.keys(obj);
-
+    console.log(keys)
     keys.forEach(key => {
-      const value = obj[key];
-      const element = document.createElement('div');
-      if (count > 1) {
-        element.classList.add('pl-8');
-      }
-      // 顯示key和value
-      const keyElement = document.createElement('span');
-      keyElement.classList.add('cursor-pointer');
-      if (typeof value === 'object') {
-        keyElement.innerText = key;
-        element.appendChild(keyElement);
-        const accordion = document.createElement('span');
-        accordion.innerText = '[-]';
-        accordion.classList.add('ml-1');
-        element.appendChild(accordion);
-      }
-      else {
-        keyElement.innerText = key + ' : ';
-        element.appendChild(keyElement);
+      if (key !== '') {
+        const value = obj[key];
+        const element = document.createElement('div');
+        if (count > 1 && obj !== objectTree.value) {
+          element.classList.add('pl-8');
+        }
+        // 顯示key和value
+        const keyElement = document.createElement('span');
+
+        if (typeof value === 'object') {
+          keyElement.innerText = key;
+          element.appendChild(keyElement);
+          const accordion = document.createElement('span');
+          accordion.innerText = '[-]';
+          accordion.classList.add('ml-1');
+          accordion.classList.add('cursor-pointer');
+
+          accordion.addEventListener('click', () => {
+            if (accordion.innerText === '[-]') {
+              accordion.innerText = '[+]';
+              element.childNodes.forEach(node => {
+                if (node !== accordion && node !== keyElement) {
+                  node.style.display = 'none';
+                }
+              });
+            } else {
+              accordion.innerText = '[-]';
+              element.childNodes.forEach(node => {
+                if (node !== accordion && node !== keyElement) {
+                  node.style.display = 'block';
+                }
+              });
+            }
+          });
+
+          element.appendChild(accordion);
+        }
+        else {
+          keyElement.innerText = key + ' : ';
+          element.appendChild(keyElement);
+        }
+
+        if (typeof value === 'object') {
+          generateHTML(value, element);
+        } else {
+          const valueElement = document.createElement('span');
+          valueElement.classList.add('text-rose-300');
+          valueElement.innerText = value;
+          element.appendChild(valueElement);
+        }
+
+        parentElement.appendChild(element);
       }
 
-      if (typeof value === 'object') {
-        generateHTML(value, element);
-      } else {
-        const valueElement = document.createElement('span');
-        valueElement.classList.add('text-rose-300');
-        valueElement.innerText = value;
-        element.appendChild(valueElement);
-      }
-
-      parentElement.appendChild(element);
     });
   }
 }
