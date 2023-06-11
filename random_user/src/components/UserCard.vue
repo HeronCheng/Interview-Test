@@ -23,7 +23,7 @@ import { ref, watch } from "vue";
 import UserModel from "./UserModel.vue";
 import emptyHeart from "../assets/favorite_empty.svg";
 import fillHeart from "../assets/favorite_fill.svg";
-import { set, del, get } from 'idb-keyval';
+import { set, del, keys } from 'idb-keyval';
 
 const props = defineProps(["data", "isLikeMode", "showMode"])
 const thisUser = ref("");
@@ -32,12 +32,13 @@ const thisUser = ref("");
 const isLike = ref(false);
 // 從 indexdb 取出加入最愛的清單
 const init = async () => {
-    await get(props.data.cell).then((val) => {
-        isLike.value = val !== undefined
+    await keys().then((keys) => {
+        console.log(keys)
+        isLike.value = keys.includes(thisUser.value.cell);
     });
 }
 
-watch(props, () => {
+watch(props, async () => {
     if (props.isLikeMode) {
         if (typeof props.data === "string") {
             thisUser.value = JSON.parse(props.data);
@@ -47,7 +48,7 @@ watch(props, () => {
     else {
         thisUser.value = props.data;
     }
-    init();
+    await init();
 }, { immediate: true })
 
 // 彈出視窗狀態
