@@ -48,8 +48,11 @@ div
   nav(class="mt-5")
     ul(class="inline-flex -space-x-px")
       li
-        a(@click="currentPage = currentPage - 1" class="cursor-pointer px-3 py-2 ml-0 mr-1.5 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700") &lt;
-      div(v-if="currentPage <= 5" class="inline-flex -space-x-px")
+        a(@click="onGoPrevious" class="cursor-pointer px-3 py-2 ml-0 mr-1.5 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700") &lt;
+      div(v-if="maxPage < 5" class="inline-flex -space-x-px")
+        li(v-for="page in maxPage" :key="page")
+          a(@click="currentPage = page" :class="currentPage === 1 ? 'selected' : 'nonSelected'") {{ page }}
+      div(v-else-if="currentPage <= 5" class="inline-flex -space-x-px")
         li
           a(@click="currentPage = 1" :class="currentPage === 1 ? 'selected' : 'nonSelected'") 1
         li
@@ -72,7 +75,7 @@ div
         li
           a(@click="currentPage = currentPage + 2" href="#" class="nonSelected") {{ currentPage + 2}}
       li
-        a(@click="currentPage = currentPage + 1" class="cursor-pointer px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700") >
+        a(@click="onGoNext" class="cursor-pointer px-3 py-2 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700") >
 </template>
 
 <script setup>
@@ -84,14 +87,18 @@ import { values } from 'idb-keyval';
 
 // 全部清單
 const userList = ref([]);
+// 初始狀態的清單(要留一份原始資料，從收藏切回全部時使用)
+const originList = ref([]);
 // 現在顯示的清單
 const pageList = ref([]);
 const currentPage = ref(1);
+const maxPage = ref(0);
 
 const init = async () => {
   await axios('https://randomuser.me/api/?results=3010')
     .then((response) => {
       userList.value = response.data.results;
+      originList.value = response.data.results;
     })
   getCurrPage();
 }
@@ -105,24 +112,64 @@ const isLikeMode = ref(false);
 const showItems = ref(30);
 // 處理頁面顯示的函式
 const getCurrPage = () => {
-  pageList.value = userList.value.slice((currentPage.value - 1) * Number(showItems.value), currentPage.value  * Number(showItems.value))
+  pageList.value = userList.value.slice((currentPage.value - 1) * Number(showItems.value), currentPage.value  * Number(showItems.value));
+  maxPage.value = Math.ceil(userList.value.length / Number(showItems.value));
 }
 // 處理 全部 & 收藏模式顯示的函式
 const onShowLike = async () => {
+  sessionStorage.setItem("isLikeMode", isLikeMode.value);
   if (isLikeMode.value) {
-    await values().then((values) => pageList.value = values);
+    await values().then((values) => userList.value = values);
+    getCurrPage();
   }
   else {
-    await init();
+    userList.value = originList.value;
+    getCurrPage();
   }
+}
+
+// 往上一頁
+function onGoPrevious() {
+  if (currentPage.value > 1) {
+    currentPage.value = currentPage.value - 1;
+  }
+  else currentPage.value = 1;
+}
+// 往下一頁
+function onGoNext() {
+  if (currentPage.value < maxPage.value) {
+    currentPage.value = currentPage.value + 1;
+  }
+  else currentPage.value = maxPage.value;
 }
 
 watch(showItems, () => {
   getCurrPage();
+  sessionStorage.setItem("showItems", showItems.value);
 })
 watch(currentPage, () => {
   getCurrPage();
+  sessionStorage.setItem("currentPage", currentPage.value);
 })
+watch(showMode, () => {
+  sessionStorage.setItem("showMode", showMode.value);
+})
+
+// 處理重新整理後要記得的資訊
+if (sessionStorage.getItem("showItems")) {
+  // 還原先前的內容
+  showItems.value = Number(sessionStorage.getItem("showItems"));
+}
+if (sessionStorage.getItem("showMode")) {
+  showMode.value = sessionStorage.getItem("showMode");
+}
+if (sessionStorage.getItem("isLikeMode")) {
+  isLikeMode.value = sessionStorage.getItem("isLikeMode") === "true" ? true : false;
+}
+if (sessionStorage.getItem("currentPage")) {
+  currentPage.value = Number(sessionStorage.getItem("currentPage"));
+}
+
 </script>
 
 <style scoped>

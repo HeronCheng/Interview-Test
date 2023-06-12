@@ -98,7 +98,6 @@ const handleTreeViewer = () => {
   function generateHTML(obj, parentElement) {
     count++;
     const keys = Object.keys(obj);
-    console.log(keys)
     keys.forEach(key => {
       if (key !== '') {
         const value = obj[key];
