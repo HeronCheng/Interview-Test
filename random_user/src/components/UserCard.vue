@@ -33,7 +33,6 @@ const isLike = ref(false);
 // 從 indexdb 取出加入最愛的清單
 const init = async () => {
     await keys().then((keys) => {
-        console.log(keys)
         isLike.value = keys.includes(thisUser.value.cell);
     });
 }
@@ -45,9 +44,7 @@ watch(props, async () => {
         }
         else thisUser.value = props.data;
     }
-    else {
-        thisUser.value = props.data;
-    }
+    else thisUser.value = props.data;
     await init();
 }, { immediate: true })
 
