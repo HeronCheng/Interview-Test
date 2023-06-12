@@ -1,5 +1,5 @@
 <template lang="pug">
-div(class="h-screen bg-slate-900 w-full")
+div(class="h-[100vh] bg-slate-900 w-full")
   MainPage
 </template>
 
